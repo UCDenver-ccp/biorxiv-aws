@@ -19,11 +19,14 @@ def clear_and_build_directories():
 
 
 def download_archive(client, bucket, remote_filepath):
-    file_part = remote_filepath.split('/')[-1]
-    if not os.path.isfile('/tmp/meca/' + file_part):
-        with open('/tmp/meca/' + file_part, 'wb') as dest:
-            client.download_fileobj(bucket, remote_filepath, dest, ExtraArgs={'RequestPayer': 'requester'})
-    return '/tmp/meca/' + file_part
+    try:
+        file_part = remote_filepath.split('/')[-1]
+        if not os.path.isfile('/tmp/meca/' + file_part):
+            with open('/tmp/meca/' + file_part, 'wb') as dest:
+                client.download_fileobj(bucket, remote_filepath, dest, ExtraArgs={'RequestPayer': 'requester'})
+        return '/tmp/meca/' + file_part
+    except:
+        return None
 
 
 def extract_xml_file(archive_filename, output_directory, prefix='content/'):
@@ -69,6 +72,9 @@ def lambda_handler(event, context):
             error_list.append(filepath)
             continue
         local_filepath = download_archive(client, source_bucket, filepath)
+        if not local_filepath:
+            error_list.append(filepath)
+            continue
         xml_filename = extract_xml_file(local_filepath, '/tmp/xml/')
         file_part = xml_filename.split('/')[-1]
         gcp_client.upload_file(xml_filename, destination_bucket, destination_prefix + file_part)

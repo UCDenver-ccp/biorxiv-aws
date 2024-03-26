@@ -1,5 +1,6 @@
 boto3
 requests
+aws_requests_auth
 docker==5.0.2
 google==3.0.0
 google-api-core==2.0.1
